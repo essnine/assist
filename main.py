@@ -1,39 +1,36 @@
 import asyncio
-import sys
+import json
+import logging
 
-from typing import Optional, List
+from quart import Quart, request
 from util.task import Task
+from uuid import uuid1
 
 
-TASK_QUEUE: List[Optional[Task]] = []
+BACKGROUND_TASKS = set()
+app = Quart(__name__)
 
 
-async def load_task_loop():
-    while True:
-        if not len(TASK_QUEUE):
-            print("sleeping for a bit...")
-            asyncio.sleep(2)
-            continue
-        task: Task = TASK_QUEUE[0]
-        print(task.name)
-        print(task.queue)
-    print("exiting...")
+@app.get("/")
+def get_hello_world():
+    return "Hello world!"
 
 
-def main():
-    print("starting up")
-    try:
-        asyncio.run(load_task_loop())
-    except Exception as exc:
-        print(
-            "Failed to start with error: {}\nExiting...".format(str(exc))
-        )
-        print(exc)
-        if len(TASK_QUEUE):
-            print("Dumping task queue to disk...")
-            # TODO: implement backup mechanism here
-        sys.exit()
+@app.post("/tasks")
+async def add_task_to_loop():
+    job_payload = await request.get_json()
+    task_item = Task(**job_payload)
+    logging.debug(f"Received task of type: {task_item.task_type}")
+    task_name = "{}_{}".format(task_item.task_type, uuid1())
+    task = asyncio.create_task(task_item.exec(), name=task_name)
+    BACKGROUND_TASKS.add(task)
+    task.add_done_callback(BACKGROUND_TASKS.discard)
+    pass
 
+
+@app.get("/tasks")
+async def get_all_queued_tasks():
+    return json.dumps(list(BACKGROUND_TASKS))
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=8090, debug=True)

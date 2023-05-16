@@ -8,7 +8,7 @@ from email import encoders
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-from util.task import Task, TaskState, TaskType
+from util.task import Task, TaskType
 
 GMAIL_PORT = 465
 GMAIL_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
@@ -26,7 +26,7 @@ class SendFeedToKindle(Task):
         super(Task, self).__init__(task_type, name)
         self.payload = payload
 
-    def exec(self):
+    async def exec(self):
         recipient = self.payload.get("recipient", "")
         subject = self.payload.get("subject", "")
         body = self.payload.get("body", "")
@@ -44,6 +44,8 @@ class SendFeedToKindle(Task):
             attachment_list = att_list
             if len(attachment_list):
                 for attachment in attachment_list:
+                    if os.path.isdir(attachment):
+                        raise Exception("Directories not allowed")
                     filename = attachment.split(CURRENT_PLATFORM_SEPARATOR)[-1]
                     print(filename)
                     with open(attachment, "rb") as attfile:

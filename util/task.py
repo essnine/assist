@@ -1,14 +1,15 @@
+from asyncio import sleep
 import logging
-
+from croniter import croniter
+from datetime import datetime
 from enum import Enum
 # import json   # importing these for preparing task dump functionality
 # import pickle
 
 
 class TaskType(Enum):
-    SYNC = 1
-    ASYNC = 2
-    CRON = 3
+    ONEOFF = 1
+    CRON = 2
 
 
 class TaskState(Enum):
@@ -19,29 +20,48 @@ class TaskState(Enum):
     FAILED = 3
 
 
+""" for my own reference, this is what each value in a cron expression
+means
+<minute> <hour> <day-of-month> <month> <day-of-week>
+"""
+
 class Task:
-    def __init__(self, task_type: TaskType, name: str):
+    def __init__(self, task_type: TaskType, name: str, cron_expr: str = ""):
         self.task_type = task_type
         self.name = name
         self.state: TaskState = 0
-        pass
+        self.cron_expr = cron_expr
+        if task_type == 2:
+            if len(cron_expr) == 0:
+                raise Exception("setting cronjob required cron expr")
 
     def dump_task(self):
         pass
 
-    def run(self):
+    async def run(self):
+        """This isn't perfect, but it should work
+        """
         if not self.state == 1:
             self.state = 1
         else:
             print("task {} is already running".format(self.name))
         try:
-            self.exec()
+            while True:
+                if self.task_type == 2:
+                    if not croniter.match(self.cron_expr, datetime.now()):
+                        await sleep(60)
+                        continue
+                    await self.exec()
+                else:
+                    await self.exec()
+                    break
         except Exception as exc:
             logging.error(f"Task failed due to error: {str(exc)}")
             logging.exception(exc)
             self.state = 3
         else:
             self.state = 2
+        logging.info("Task Ended")
 
-    def exec(self):
+    async def exec(self):
         pass
