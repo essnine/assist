@@ -7,12 +7,13 @@ Anyway. It's written in Python 3.8. The first thing I wanted to create was a mai
 Honestly, I wanted to make something like this at work ages ago, when building out some automation for creating search indexes on a platform running on Kubernetes. With some seniors' input and a little curiosity, I ended up using Argo Workflows for that task, but seemed like overkill then and still does now. A lot of ML work is deep magic happening inside precomplied binaries that we hit with python wrappers, and doing K-native stuff just for orchestrating stuff that's happening over API calls anyway doesn't feel right. So, here. General purpose automation. For my own little computer tings for now.
 
 ## TODOs:
-- Add scheduled ping task template
+✅ Add Demo Task template
 
-- Add one-off ping task template
+- Add Scheduled Ping Task template
 
-- Add custom code runner template
+- Add One-Off Ping Task template
+
+- Add Custom Code Runner template
 
 - Maybe play around with letting tasks call other tasks
 
- 

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 import smtplib
 import ssl
@@ -54,7 +54,7 @@ def send_mail_item(
             server.sendmail(GMAIL_USERNAME, recipient, text)
     except Exception as exc:
         print("Count not send email, reason:")
-        logging.exception(exc)
+        logger.exception(exc)
     return None
 
 

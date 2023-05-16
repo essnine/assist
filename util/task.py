@@ -1,5 +1,5 @@
 from asyncio import sleep
-import logging
+from loguru import logger
 from croniter import croniter
 from datetime import datetime
 from enum import Enum
@@ -25,7 +25,7 @@ means
 <minute> <hour> <day-of-month> <month> <day-of-week>
 """
 
-class Task:
+class SimpleTask:
     def __init__(self, task_type: TaskType, name: str, cron_expr: str = ""):
         self.task_type = task_type
         self.name = name
@@ -37,6 +37,13 @@ class Task:
 
     def dump_task(self):
         pass
+
+    def __str__(self):
+        return str((self.name, {
+            "name": self.name,
+            "state": self.state,
+            "cron_expr": self.cron_expr,
+        }))
 
     async def run(self):
         """This isn't perfect, but it should work
@@ -56,12 +63,13 @@ class Task:
                     await self.exec()
                     break
         except Exception as exc:
-            logging.error(f"Task failed due to error: {str(exc)}")
-            logging.exception(exc)
+            logger.error(f"Task failed due to error: {str(exc)}")
+            logger.exception(exc)
             self.state = 3
         else:
             self.state = 2
-        logging.info("Task Ended")
+        logger.info("Task Ended")
 
     async def exec(self):
+        logger.info("Running Sample Task")
         pass

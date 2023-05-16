@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 import smtplib
 import ssl
@@ -8,7 +8,7 @@ from email import encoders
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-from util.task import Task, TaskType
+from util.task import SimpleTask, TaskType
 
 GMAIL_PORT = 465
 GMAIL_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
@@ -16,14 +16,14 @@ GMAIL_USERNAME = os.getenv("GMAIL_USERNAME")
 CURRENT_PLATFORM_SEPARATOR = "\\" if sys.platform == "win32" else "/"
 
 
-class SendFeedToKindle(Task):
+class Kindle(SimpleTask):
     def __init__(
         self,
         task_type: TaskType,
         name: str,
         payload: dict = {},
     ):
-        super(Task, self).__init__(task_type, name)
+        super(SimpleTask, self).__init__(task_type, name)
         self.payload = payload
 
     async def exec(self):
@@ -69,5 +69,5 @@ class SendFeedToKindle(Task):
                 server.sendmail(GMAIL_USERNAME, recipient, text)
         except Exception as exc:
             print("Count not send email, reason:")
-            logging.exception(exc)
+            logger.exception(exc)
         return None

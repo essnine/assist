@@ -1,9 +1,12 @@
 import asyncio
 import json
-import logging
+import uvicorn
+import importlib
 
+from loguru import logger
 from quart import Quart, request
-from util.task import Task
+from util.task import SimpleTask
+from util.runner import process_task
 from uuid import uuid1
 
 
@@ -11,26 +14,31 @@ BACKGROUND_TASKS = set()
 app = Quart(__name__)
 
 
-@app.get("/")
+@app.route("/", methods=["GET"])
 def get_hello_world():
     return "Hello world!"
 
 
-@app.post("/tasks")
+@app.route("/tasks", methods=["POST"])
 async def add_task_to_loop():
-    job_payload = await request.get_json()
-    task_item = Task(**job_payload)
-    logging.debug(f"Received task of type: {task_item.task_type}")
-    task_name = "{}_{}".format(task_item.task_type, uuid1())
-    task = asyncio.create_task(task_item.exec(), name=task_name)
-    BACKGROUND_TASKS.add(task)
-    task.add_done_callback(BACKGROUND_TASKS.discard)
-    pass
+    try:
+        job_payload = await request.get_json()
+        task_class = job_payload.get("taskClass")
+        logger.debug(f"Received task of type: {task_class}")
+        task, task_name = process_task(**job_payload)
+        BACKGROUND_TASKS.add(task)
+        task.add_done_callback(BACKGROUND_TASKS.discard)
+        return {"taskName": task_name, "message": "", "success": True}, 200
+    except Exception as exc:
+        logger.exception(exc)
+        return {"message": str(exc), "success": False}, 422
 
 
-@app.get("/tasks")
+@app.route("/tasks", methods=["GET"])
 async def get_all_queued_tasks():
-    return json.dumps(list(BACKGROUND_TASKS))
+    # logger.info(json.dumps([str(i) for i in asyncio.all_tasks()], indent=4))
+    return json.dumps([str(i) for i in BACKGROUND_TASKS]), 200
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8090, debug=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8090, log_level="info")
