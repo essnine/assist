@@ -73,3 +73,4 @@ class SimpleTask:
     async def exec(self):
         logger.info("Running Sample Task")
         pass
+

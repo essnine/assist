@@ -1,13 +1,13 @@
-import asyncio
 import json
-import uvicorn
-import importlib
 
+import uvicorn
 from loguru import logger
 from quart import Quart, request
-from util.task import SimpleTask
+
 from util.runner import process_task
-from uuid import uuid1
+
+# from util.task import SimpleTask
+# from uuid import uuid1
 
 
 BACKGROUND_TASKS = set()
@@ -37,7 +37,7 @@ async def add_task_to_loop():
 @app.route("/tasks", methods=["GET"])
 async def get_all_queued_tasks():
     # logger.info(json.dumps([str(i) for i in asyncio.all_tasks()], indent=4))
-    return json.dumps([str(i) for i in BACKGROUND_TASKS]), 200
+    return json.dumps([str(i) for i in BACKGROUND_TASKS]), 20
 
 
 if __name__ == "__main__":
